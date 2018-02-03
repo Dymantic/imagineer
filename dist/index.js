@@ -490,7 +490,8 @@ module.exports = defaults;
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_axios__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_axios__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_PreviewGenerator__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__assets_default_image__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_PreviewGenerator__ = __webpack_require__(37);
 //
 //
 //
@@ -501,6 +502,15 @@ module.exports = defaults;
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+
 
 
 
@@ -529,13 +539,17 @@ module.exports = defaults;
       type: String,
       default: ""
     },
-    "aspect-x": {
+    "preview-width": {
       type: Number,
       default: 300
     },
+    "aspect-x": {
+      type: Number,
+      default: 3
+    },
     "aspect-y": {
       type: Number,
-      default: 300
+      default: 2
     }
   },
 
@@ -543,7 +557,9 @@ module.exports = defaults;
     return {
       last_server_src: null,
       current_preview: null,
-      default_src: "/default/image.jpg"
+      default_src: __WEBPACK_IMPORTED_MODULE_1__assets_default_image__["a" /* default */],
+      upload_progress: 0,
+      uploading: false
     };
   },
 
@@ -565,6 +581,20 @@ module.exports = defaults;
       }
 
       return this.last_server_src;
+    },
+
+    aspect_string() {
+      return `0 0 ${this.aspectX} ${this.aspectY}`;
+    },
+
+    upload_style() {
+      const translate_amount = 100 - this.upload_progress;
+      return { transform: `translate3d(-${translate_amount}%,0,0)` };
+    },
+
+    background_style() {
+      const colour = this.last_server_src || this.current_preview ? "transparent" : "#c4c4c4";
+      return { background: colour };
     }
   },
 
@@ -592,10 +622,14 @@ module.exports = defaults;
     },
 
     getPreview(file) {
-      return Object(__WEBPACK_IMPORTED_MODULE_1__lib_PreviewGenerator__["a" /* generatePreview */])(file, {
-        pWidth: this.aspectX,
-        pHeight: this.aspectY
-      });
+      return Object(__WEBPACK_IMPORTED_MODULE_2__lib_PreviewGenerator__["a" /* generatePreview */])(file, this.previewDimensions());
+    },
+
+    previewDimensions() {
+      return {
+        pWidth: this.previewWidth,
+        pHeight: this.previewWidth * (this.aspectY / this.aspectX)
+      };
     },
 
     validateFile(file) {
@@ -618,8 +652,14 @@ module.exports = defaults;
 
     uploadFile(file) {
       let image = new FormData();
+      this.uploading = true;
       image.append("image", file);
-      __WEBPACK_IMPORTED_MODULE_0_axios___default.a.post(this.uploadUrl, image).then(({ data }) => this.onUploadSuccess(data)).catch(err => this.onUploadFailure(err));
+      __WEBPACK_IMPORTED_MODULE_0_axios___default.a.post(this.uploadUrl, image, {
+        onUploadProgress: ev => this.upload_progress = parseInt(ev.loaded / ev.total * 100)
+      }).then(({ data }) => this.onUploadSuccess(data)).catch(err => this.onUploadFailure(err)).then(() => {
+        this.uploading = false;
+        this.upload_progress = 0;
+      });
     },
 
     onUploadSuccess(response_data) {
@@ -1142,7 +1182,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_ImageUpload_vue__ = __webpack_require__(2);
 /* unused harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_d1499988_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ImageUpload_vue__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_d1499988_hasScoped_false_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ImageUpload_vue__ = __webpack_require__(38);
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
@@ -1226,7 +1266,7 @@ exports = module.exports = __webpack_require__(13)(false);
 
 
 // module
-exports.push([module.i, "\n.dd-image-uploader {\n  position: relative;\n}\n.dd-image-uploader label {\n    position: absolute;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n.dd-image-uploader label img {\n      width: 100%;\n}\n", ""]);
+exports.push([module.i, "\n.dd-image-uploader {\n  position: relative;\n}\n.dd-image-uploader input[type=\"file\"] {\n    display: none;\n}\n.dd-image-uploader label {\n    position: absolute;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n    display: flex;\n    justify-content: center;\n    align-items: center;\n}\n.dd-image-uploader label img {\n      max-width: 100%;\n      max-height: 100%;\n      width: auto;\n      height: auto;\n}\n.dd-image-uploader .aspect-box {\n    display: grid;\n}\n.dd-image-uploader .aspect-box > * {\n      grid-area: 1 / 1 / 2 / 2;\n}\n.dd-image-uploader .aspect-box > div {\n      position: relative;\n}\n.dd-image-uploader .aspect-box label {\n      overflow: hidden;\n}\n.dd-image-uploader .upload-track {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 10px;\n    background: transparent;\n    overflow: hidden;\n    z-index: 99999;\n}\n.dd-image-uploader .upload-track .upload-bar {\n      width: 100%;\n      height: 10px;\n      background: #1f9d55;\n      transform: translate3d(-100%, 0, 0);\n}\n.dd-image-uploader .delete-btn {\n    font-size: 0.75rem;\n    color: darkred;\n    border: none;\n    background: transparent;\n    text-decoration: underline;\n}\n", ""]);
 
 // exports
 
@@ -2578,64 +2618,73 @@ module.exports = function spread(callback) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony default export */ __webpack_exports__["a"] = ("data:image/png;base64,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");
+
+/***/ }),
+/* 37 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return generatePreview; });
 function generatePreview(file) {
-    var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        _ref$pWidth = _ref.pWidth,
-        pWidth = _ref$pWidth === undefined ? 300 : _ref$pWidth,
-        _ref$pHeight = _ref.pHeight,
-        pHeight = _ref$pHeight === undefined ? 300 : _ref$pHeight;
+  var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+      _ref$pWidth = _ref.pWidth,
+      pWidth = _ref$pWidth === undefined ? 300 : _ref$pWidth,
+      _ref$pHeight = _ref.pHeight,
+      pHeight = _ref$pHeight === undefined ? 300 : _ref$pHeight;
 
-    function makeCanvas() {
-        return document.createElement('canvas');
-    }
+  function makeCanvas() {
+    return document.createElement("canvas");
+  }
 
-    function getSourceDimensions(iWidth, iHeight, ratio) {
-        var isLandscape = iWidth / iHeight > ratio;
+  function getSourceDimensions(iWidth, iHeight, ratio) {
+    var isLandscape = iWidth / iHeight > ratio;
 
-        return {
-            sWidth: isLandscape ? iHeight * ratio : iWidth,
-            sHeight: isLandscape ? iHeight : iWidth / ratio,
-            sX: isLandscape ? (iWidth - iHeight * ratio) / 2 : 0,
-            sY: isLandscape ? 0 : (iHeight - iWidth / ratio) / 2
-        };
-    }
+    return {
+      sWidth: isLandscape ? iHeight * ratio : iWidth,
+      sHeight: isLandscape ? iHeight : iWidth / ratio,
+      sX: isLandscape ? (iWidth - iHeight * ratio) / 2 : 0,
+      sY: isLandscape ? 0 : (iHeight - iWidth / ratio) / 2
+    };
+  }
 
-    function getPreviewSrc(image, sDimensions) {
-        var canvas = makeCanvas();
-        var ctx = canvas.getContext('2d');
-        canvas.width = pWidth;
-        canvas.height = pHeight;
-        ctx.drawImage(image, sDimensions.sX, sDimensions.sY, sDimensions.sWidth, sDimensions.sHeight, 0, 0, pWidth, pHeight);
-        return canvas.toDataURL();
-    }
+  function getPreviewSrc(image, sDimensions) {
+    var dest_width = Math.min(pWidth, image.width);
+    var dest_height = dest_width * (pHeight / pWidth);
+    var canvas = makeCanvas();
+    var ctx = canvas.getContext("2d");
+    canvas.width = dest_width;
+    canvas.height = dest_height;
+    ctx.drawImage(image, sDimensions.sX, sDimensions.sY, sDimensions.sWidth, sDimensions.sHeight, 0, 0, dest_width, dest_height);
+    return canvas.toDataURL();
+  }
 
-    function createPreview(image) {
-        return getPreviewSrc(image, getSourceDimensions(image.width, image.height, pWidth / pHeight));
-    }
+  function createPreview(image) {
+    return getPreviewSrc(image, getSourceDimensions(image.width, image.height, pWidth / pHeight));
+  }
 
-    var promise = new Promise(function (resolve, reject) {
-        var fileReader = new FileReader();
-        var preview = new Image();
-        fileReader.onload = function (ev) {
-            preview.src = ev.target.result;
-            preview.onload = function (ev) {
-                return resolve(createPreview(ev.target));
-            };
-        };
-        fileReader.onerror = function (err) {
-            return reject(err);
-        };
-        fileReader.readAsDataURL(file);
-    });
+  var promise = new Promise(function (resolve, reject) {
+    var fileReader = new FileReader();
+    var preview = new Image();
+    fileReader.onload = function (ev) {
+      preview.src = ev.target.result;
+      preview.onload = function (ev) {
+        return resolve(createPreview(ev.target));
+      };
+    };
+    fileReader.onerror = function (err) {
+      return reject(err);
+    };
+    fileReader.readAsDataURL(file);
+  });
 
-    return promise;
+  return promise;
 }
 
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2644,20 +2693,42 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", { staticClass: "dd-image-uploader" }, [
-    _c("input", {
-      attrs: { type: "file", id: _vm.input_id },
-      on: {
-        change: function($event) {
-          _vm.handleFile($event)
-        }
-      }
-    }),
+    _c(
+      "div",
+      {
+        directives: [
+          {
+            name: "show",
+            rawName: "v-show",
+            value: _vm.uploading,
+            expression: "uploading"
+          }
+        ],
+        staticClass: "upload-track"
+      },
+      [_c("div", { staticClass: "upload-bar", style: _vm.upload_style })]
+    ),
     _vm._v(" "),
-    _c("label", { attrs: { for: _vm.input_id } }, [
-      _c("img", {
-        staticClass: "preview",
-        attrs: { src: _vm.preview_src, alt: "" }
-      })
+    _c("div", { staticClass: "aspect-box", style: _vm.background_style }, [
+      _c("svg", { attrs: { viewBox: _vm.aspect_string } }),
+      _vm._v(" "),
+      _c("div", [
+        _c("input", {
+          attrs: { type: "file", id: _vm.input_id },
+          on: {
+            change: function($event) {
+              _vm.handleFile($event)
+            }
+          }
+        }),
+        _vm._v(" "),
+        _c("label", { attrs: { for: _vm.input_id } }, [
+          _c("img", {
+            staticClass: "preview",
+            attrs: { src: _vm.preview_src, alt: "" }
+          })
+        ])
+      ])
     ]),
     _vm._v(" "),
     _c(
@@ -2667,14 +2738,14 @@ var render = function() {
           {
             name: "show",
             rawName: "v-show",
-            value: _vm.deleteUrl,
-            expression: "deleteUrl"
+            value: _vm.deleteUrl && _vm.last_server_src,
+            expression: "deleteUrl && last_server_src"
           }
         ],
         staticClass: "delete-btn",
         on: { click: _vm.deleteImage }
       },
-      [_vm._v("CLear image")]
+      [_vm._v("Clear image")]
     )
   ])
 }

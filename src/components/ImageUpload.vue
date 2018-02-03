@@ -1,15 +1,24 @@
 <template>
   <div class="dd-image-uploader">
-      <input type="file" :id="input_id" @change="handleFile($event)">
-      <label :for="input_id">
-        <img :src="preview_src" alt="" class="preview">       
-      </label>
-      <button v-show="deleteUrl" class="delete-btn" @click="deleteImage">CLear image</button>
+    <div class="upload-track" v-show="uploading">
+      <div class="upload-bar" :style="upload_style"></div>
+    </div>
+    <div class="aspect-box" :style="background_style">
+      <svg :viewBox="aspect_string"></svg>
+      <div>
+        <input type="file" :id="input_id" @change="handleFile($event)">
+        <label :for="input_id">
+          <img :src="preview_src" alt="" class="preview">       
+        </label>
+      </div>
+    </div>
+    <button v-show="deleteUrl && last_server_src" class="delete-btn" @click="deleteImage">Clear image</button>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import default_image_src from "../assets/default_image";
 import { generatePreview } from "../../lib/PreviewGenerator";
 
 export default {
@@ -36,13 +45,17 @@ export default {
       type: String,
       default: ""
     },
-    "aspect-x": {
+    "preview-width": {
       type: Number,
       default: 300
     },
+    "aspect-x": {
+      type: Number,
+      default: 3
+    },
     "aspect-y": {
       type: Number,
-      default: 300
+      default: 2
     }
   },
 
@@ -50,7 +63,9 @@ export default {
     return {
       last_server_src: null,
       current_preview: null,
-      default_src: "/default/image.jpg"
+      default_src: default_image_src,
+      upload_progress: 0,
+      uploading: false
     };
   },
 
@@ -74,6 +89,23 @@ export default {
       }
 
       return this.last_server_src;
+    },
+
+    aspect_string() {
+      return `0 0 ${this.aspectX} ${this.aspectY}`;
+    },
+
+    upload_style() {
+      const translate_amount = 100 - this.upload_progress;
+      return { transform: `translate3d(-${translate_amount}%,0,0)` };
+    },
+
+    background_style() {
+      const colour =
+        this.last_server_src || this.current_preview
+          ? "transparent"
+          : "#c4c4c4";
+      return { background: colour };
     }
   },
 
@@ -101,10 +133,14 @@ export default {
     },
 
     getPreview(file) {
-      return generatePreview(file, {
-        pWidth: this.aspectX,
-        pHeight: this.aspectY
-      });
+      return generatePreview(file, this.previewDimensions());
+    },
+
+    previewDimensions() {
+      return {
+        pWidth: this.previewWidth,
+        pHeight: this.previewWidth * (this.aspectY / this.aspectX)
+      };
     },
 
     validateFile(file) {
@@ -131,11 +167,19 @@ export default {
 
     uploadFile(file) {
       let image = new FormData();
+      this.uploading = true;
       image.append("image", file);
       axios
-        .post(this.uploadUrl, image)
+        .post(this.uploadUrl, image, {
+          onUploadProgress: ev =>
+            (this.upload_progress = parseInt(ev.loaded / ev.total * 100))
+        })
         .then(({ data }) => this.onUploadSuccess(data))
-        .catch(err => this.onUploadFailure(err));
+        .catch(err => this.onUploadFailure(err))
+        .then(() => {
+          this.uploading = false;
+          this.upload_progress = 0;
+        });
     },
 
     onUploadSuccess(response_data) {
@@ -197,16 +241,68 @@ export default {
 .dd-image-uploader {
   position: relative;
 
+  input[type="file"] {
+    display: none;
+  }
+
   label {
     position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     img {
-      width: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
     }
+  }
+
+  .aspect-box {
+    display: grid;
+
+    & > * {
+      grid-area: 1 / 1 / 2 / 2;
+    }
+
+    & > div {
+      position: relative;
+    }
+
+    label {
+      overflow: hidden;
+    }
+  }
+
+  .upload-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: transparent;
+    overflow: hidden;
+    z-index: 99999;
+
+    .upload-bar {
+      width: 100%;
+      height: 10px;
+      background: #1f9d55;
+      transform: translate3d(-100%, 0, 0);
+    }
+  }
+
+  .delete-btn {
+    font-size: 0.75rem;
+    color: darkred;
+    border: none;
+    background: transparent;
+    text-decoration: underline;
   }
 }
 </style>

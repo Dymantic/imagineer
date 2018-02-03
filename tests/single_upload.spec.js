@@ -57,6 +57,47 @@ describe("A single image upload component", () => {
     });
   });
 
+  it("the uploading flag is initially false", () => {
+    assert.isFalse(component.vm.uploading);
+  });
+
+  it("sets uploading to true whilst uploading", done => {
+    selectFile({ size: 1000, type: "image/png" });
+
+    assert.isTrue(component.vm.uploading);
+
+    done();
+  });
+
+  it("resets the uploading progress and flag after a okay response", done => {
+    moxios.stubRequest("/test/upload/url", { status: 200 });
+    selectFile({ size: 1000, type: "image/png" });
+
+    moxios.wait(() => {
+      assert.equal(0, component.vm.upload_progress);
+      assert.isFalse(component.vm.uploading);
+      done();
+    });
+  });
+
+  it("resets the uploading progress and flag after a fail response", done => {
+    moxios.stubRequest("/test/upload/url", { status: 500 });
+    selectFile({ size: 1000, type: "image/png" });
+
+    moxios.wait(() => {
+      assert.equal(0, component.vm.upload_progress);
+      assert.isFalse(component.vm.uploading);
+      done();
+    });
+  });
+
+  it("will not show delete button if has no last server src", () => {
+    component.setProps({ deleteUrl: "/test/delete/url" });
+    component.setData({ last_server_src: null });
+    const delete_btn = component.find(".delete-btn");
+    assert.equal("none", delete_btn.element.style.display);
+  });
+
   function selectFile(file_data) {
     let takeFileStub = sinon.stub().returns(file_data);
     component.setMethods({ takeFile: takeFileStub });
