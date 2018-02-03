@@ -15,7 +15,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Dymantic/vuetilities"
+    "url": "https://github.com/Dymantic/imagineer"
   },
   "devDependencies": {
     "@vue/test-utils": "^1.0.0-beta.10",
