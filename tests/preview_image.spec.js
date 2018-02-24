@@ -110,6 +110,16 @@ describe("The image preview of the upload component", () => {
     assert.deepEqual({ pWidth: 300, pHeight: 200 }, preview_dimensions);
   });
 
+  it("will keep the original aspect ratio if aspect x or aspect y is auto", () => {
+    component.setProps({
+      previewWidth: 750,
+      aspectX: "auto",
+      aspectY: 2
+    });
+    const preview_dimensions = component.vm.previewDimensions();
+    assert.deepEqual({ pWidth: "auto", pHeight: "auto" }, preview_dimensions);
+  });
+
   it("calculates the correct preview dimensions when user gives review width", () => {
     component.setProps({
       previewWidth: 750,

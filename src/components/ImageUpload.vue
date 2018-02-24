@@ -50,11 +50,11 @@ export default {
       default: 300
     },
     "aspect-x": {
-      type: Number,
+      type: [Number, String],
       default: 3
     },
     "aspect-y": {
-      type: Number,
+      type: [Number, String],
       default: 2
     }
   },
@@ -92,6 +92,9 @@ export default {
     },
 
     aspect_string() {
+      if (this.aspectX === "auto" || this.aspectY === "auto") {
+        return `0 0 100 100`;
+      }
       return `0 0 ${this.aspectX} ${this.aspectY}`;
     },
 
@@ -137,6 +140,12 @@ export default {
     },
 
     previewDimensions() {
+      if (this.aspectX === "auto" || this.aspectY === "auto") {
+        return {
+          pWidth: "auto",
+          pHeight: "auto"
+        };
+      }
       return {
         pWidth: this.previewWidth,
         pHeight: this.previewWidth * (this.aspectY / this.aspectX)
